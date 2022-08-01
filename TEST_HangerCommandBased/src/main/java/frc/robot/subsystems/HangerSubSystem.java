@@ -89,7 +89,13 @@ public class HangerSubSystem extends SubsystemBase {
     }
 
     public boolean isBusy(){
-        double volt = motor.getMotorOutputVoltage();
+        double percent = motor.getMotorOutputPercent();
+        if(percent < 0.1){
+            return false;
+        }
+        else{
+            return true;
+        }
         
     }
 

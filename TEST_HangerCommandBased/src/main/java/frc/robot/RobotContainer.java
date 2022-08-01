@@ -13,6 +13,7 @@ import frc.robot.commands.goToTarget;
 import frc.robot.subsystems.ExampleSubsystem;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import frc.robot.subsystems.HangerSubSystem;
 
@@ -24,7 +25,7 @@ import frc.robot.subsystems.HangerSubSystem;
  */
 public class RobotContainer {
 
-  public Joystick joystick1 = new Joystick(0);
+  static public Joystick joystick1 = new Joystick(0);
 
   JoystickButton cross = new JoystickButton(joystick1, 1);
   public JoystickButton square = new JoystickButton(joystick1, 3);
@@ -71,7 +72,7 @@ public class RobotContainer {
     // circle.whenPressed();
     // square.whenPressed();
 
-    cross.whenPressed(new SequentialCommandGroup(new goToTarget(hanger1, 10000), new goToTarget(hanger2, 10000), new goToTarget(hanger1, 0), new goToTarget(hanger2, 0)));
+    cross.whenPressed(new SequentialCommandGroup(new goToTarget(hanger1, 10000).alongWith(new goToTarget(hanger2, 10000)) , new WaitCommand(0.3), new goToTarget(hanger1, 0).alongWith(new goToTarget(hanger2, 0)) ));
 
   }
 
