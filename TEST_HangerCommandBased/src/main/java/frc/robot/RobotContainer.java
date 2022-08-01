@@ -33,8 +33,8 @@ public class RobotContainer {
   JoystickButton circle = new JoystickButton(joystick1, 2);
 
 
-  private final int hanger1CANID = 10;
-  private final int hanger2CANID = 2;
+  private final int hanger1CANID = 6;
+  private final int hanger2CANID = 3;
 
   public double hanger1Setpoint;
 
@@ -59,6 +59,9 @@ public class RobotContainer {
     // hanger2.setPIDF(1.1, 0, 0, 0);
 
     hanger1.setLimits(0, 253000);
+
+    hanger1.setInverted(false);
+    hanger2.setInverted(true);
     // hanger1.setPIDF(1.1, 0, 0, 0);
 
     // Configure the button bindings
@@ -72,8 +75,7 @@ public class RobotContainer {
     // circle.whenPressed();
     // square.whenPressed();
 
-    cross.whenPressed(new SequentialCommandGroup(new goToTarget(hanger1, 10000).alongWith(new goToTarget(hanger2, 10000)) , new WaitCommand(0.3), new goToTarget(hanger1, 0).alongWith(new goToTarget(hanger2, 0)) ));
-
+    cross.whenPressed(new SequentialCommandGroup(new goToTarget(hanger1, 200000), new WaitCommand(0.5),new goToTarget(hanger2, 200000) , new WaitCommand(1), new goToTarget(hanger1, 0), new WaitCommand(0.5) ,new goToTarget(hanger2, 0)));
   }
 
   /**

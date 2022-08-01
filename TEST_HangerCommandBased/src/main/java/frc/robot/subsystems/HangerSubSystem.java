@@ -37,8 +37,8 @@ public class HangerSubSystem extends SubsystemBase {
         this.motor.setInverted(false);
         this.motor.configNominalOutputForward(0, 30);
         this.motor.configNominalOutputReverse(0, 30);
-        this.motor.configPeakOutputForward(0.1, 30);
-        this.motor.configPeakOutputReverse(-0.1, 30);
+        this.motor.configPeakOutputForward(0.9, 30);
+        this.motor.configPeakOutputReverse(-0.9, 30);
         this.motor.configAllowableClosedloopError(0, 0, 30);
         this.motor.config_kF(0, f);
         this.motor.config_kP(0, p);
@@ -46,7 +46,7 @@ public class HangerSubSystem extends SubsystemBase {
         this.motor.config_kD(0, d);
         this.motor.setNeutralMode(NeutralMode.Brake);
         this.motor.setSelectedSensorPosition(0);
-        this.setPIDF(0.1, 0, 0, 0);
+        this.setPIDF(0.6, 0, 0, 0);
         SmartDashboard.putNumber("P" + canid, this.p);
         SmartDashboard.putNumber("I" + canid, this.i);
         SmartDashboard.putNumber("D" + canid, this.d);
@@ -73,6 +73,10 @@ public class HangerSubSystem extends SubsystemBase {
             target = MINPOSITION;
         }
         this.TargetPoint = target;
+    }
+
+    public void setInverted(boolean state){
+        motor.setInverted(state);
     }
     
     public void setPiston(boolean state) {
