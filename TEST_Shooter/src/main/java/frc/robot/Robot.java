@@ -27,7 +27,7 @@ public class Robot extends TimedRobot {
   double p1, i1, d1, f1;
   double p_flywheel, i_flywheel, d_flywheel, f_flywheel;
   WPI_TalonFX hood = new WPI_TalonFX(7);
-  WPI_TalonFX flywheel = new WPI_TalonFX(4);
+  WPI_TalonFX flywheel = new WPI_TalonFX(1);
 
   double rpm = 0;
   double flywheel_speed;
@@ -35,6 +35,8 @@ public class Robot extends TimedRobot {
   double increment1;
   double setpoint1;
   Joystick Joy1 = new Joystick(0);
+
+  double DEGREETOENCODER = (12 * 360)/(2048 * 20 * 31.25);
 
   /**
    * This function is run when the robot is first started up and should be used
@@ -48,10 +50,10 @@ public class Robot extends TimedRobot {
     d1 = 0.5;
     f1 = 0;
 
-    p_flywheel = 0.09;
+    p_flywheel = 0;
     i_flywheel = 0;
     d_flywheel = 0;
-    f_flywheel = 0.46;
+    f_flywheel = 0.19002;
 
     hood.configFactoryDefault();
     hood.configSelectedFeedbackSensor(TalonFXFeedbackDevice.IntegratedSensor,
@@ -73,7 +75,7 @@ public class Robot extends TimedRobot {
 
     flywheel.configFactoryDefault();
     flywheel.configSelectedFeedbackSensor(TalonFXFeedbackDevice.IntegratedSensor, 0, 30);
-    flywheel.setSensorPhase(true);
+    flywheel.setSensorPhase(false);
     flywheel.setInverted(false);
     flywheel.configNominalOutputForward(0, 30);
     flywheel.configNominalOutputReverse(0, 30);
@@ -85,6 +87,7 @@ public class Robot extends TimedRobot {
     flywheel.config_kD(0, d_flywheel);
     flywheel.config_kI(0, i_flywheel);
     flywheel.setNeutralMode(NeutralMode.Coast);
+    flywheel.configClosedloopRamp(5);
 
     SmartDashboard.putNumber("P1", p1);
     SmartDashboard.putNumber("I1", i1);
@@ -176,16 +179,20 @@ public class Robot extends TimedRobot {
     i_flywheel = SmartDashboard.getNumber("I_Flywheel", 0);
     d_flywheel = SmartDashboard.getNumber("D_Flywheel", 0);
     f_flywheel = SmartDashboard.getNumber("F_Flywheel", 0);
+    flywheel.config_kF(0, f_flywheel);
+    flywheel.config_kP(0, p_flywheel);
+    flywheel.config_kD(0, d_flywheel);
+    flywheel.config_kI(0, i_flywheel);
 
     if (Joy1.getRawButton(4) && !Joy1.getRawButton(3)) {
-      if (increment1 <= 15) {
-        increment1 = increment1 + 1;
+      if (increment1 <= 40) {
+        increment1 = increment1 + 0.3;
       } else {
-        increment1 = 15;
+        increment1 = 40;
       }
     } else if (Joy1.getRawButton(3) && !Joy1.getRawButton(4)) {
       if (increment1 >= 0) {
-        increment1 = increment1 - 1;
+        increment1 = increment1 - 0.3;
       } else {
         increment1 = 0;
       }
@@ -197,6 +204,9 @@ public class Robot extends TimedRobot {
     else if(Joy1.getRawButtonPressed(2)){
       rpm = rpm - 100;
     }
+    if(rpm < 0){
+      rpm = 0;
+    }
 
     if (Joy1.getRawButtonPressed(5)) {
       if (flywheel_flag == true) {
@@ -205,14 +215,17 @@ public class Robot extends TimedRobot {
         flywheel_flag = true;
       }
     }
-    setpoint1 = (increment1 / 360) * (31.25 * (20 / 12) * 2048);
+
+    
+    setpoint1 = (increment1 / DEGREETOENCODER);
+    double degree = hood.getSelectedSensorPosition() * DEGREETOENCODER;
     SmartDashboard.putNumber("Increment", increment1);
-    SmartDashboard.putNumber("Stator", hood.getStatorCurrent());
-    SmartDashboard.putNumber("RPM hood", (hood.getSelectedSensorVelocity() * 600) / 2048);
-    SmartDashboard.putNumber("Error", increment1 - (hood.getSelectedSensorPosition() / (31.25 * (20 / 12)) * 360));
+    SmartDashboard.putNumber("Stator Current", hood.getStatorCurrent());
+    SmartDashboard.putNumber("Encoder Position", hood.getSelectedSensorPosition());
+    SmartDashboard.putNumber("Hood Degree", degree);
     SmartDashboard.putNumber("Output precent", hood.getMotorOutputPercent());
     SmartDashboard.putNumber("CLosed Loop ERROR", hood.getClosedLoopError(0));
-    SmartDashboard.putNumber("Speed of Flywheel", flywheel.getSelectedSensorVelocity());
+    SmartDashboard.putNumber("Speed of Flywheel", flywheel.getSelectedSensorVelocity() * 600/2048);
     SmartDashboard.putNumber("Target RPM of Flywheel ", rpm);
     SmartDashboard.putBoolean("Flag value", flywheel_flag);
 
@@ -220,6 +233,9 @@ public class Robot extends TimedRobot {
 
     if (flywheel_flag == true) {
       flywheel.set(TalonFXControlMode.Velocity, rpm);
+    }
+    else{
+      flywheel.set(TalonFXControlMode.Velocity, 0);
     }
   }
 
