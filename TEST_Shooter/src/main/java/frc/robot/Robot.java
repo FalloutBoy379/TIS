@@ -10,7 +10,9 @@ import com.ctre.phoenix.motorcontrol.TalonFXFeedbackDevice;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 
 import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.SerialPort;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.SerialPort.Port;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 /**
@@ -27,7 +29,9 @@ public class Robot extends TimedRobot {
   double p1, i1, d1, f1;
   double p_flywheel, i_flywheel, d_flywheel, f_flywheel;
   WPI_TalonFX hood = new WPI_TalonFX(7);
-  WPI_TalonFX flywheel = new WPI_TalonFX(1);
+  WPI_TalonFX flywheel = new WPI_TalonFX(4);
+
+  SerialPort arduino = new SerialPort(9600, Port.kUSB1);
 
   double rpm = 0;
   double flywheel_speed;
@@ -153,6 +157,10 @@ public class Robot extends TimedRobot {
   /** This function is called periodically during operator control. */
   @Override
   public void teleopPeriodic() {
+
+    if(arduino.getBytesReceived() > 0) {
+       SmartDashboard.putString("Received: ", arduino.readString());
+    }
     double kp1 = SmartDashboard.getNumber("P1", 0);
     double ki1 = SmartDashboard.getNumber("I1", 0);
     double kd1 = SmartDashboard.getNumber("D1", 0);
