@@ -79,8 +79,8 @@ public class Robot extends TimedRobot {
 
     flywheel.configFactoryDefault();
     flywheel.configSelectedFeedbackSensor(TalonFXFeedbackDevice.IntegratedSensor, 0, 30);
-    flywheel.setSensorPhase(false);
-    flywheel.setInverted(false);
+    flywheel.setSensorPhase(Constants.Shooter.ksensorPhase);
+    flywheel.setInverted(Constants.Shooter.kmotorInverted);
     flywheel.configNominalOutputForward(0, 30);
     flywheel.configNominalOutputReverse(0, 30);
     flywheel.configPeakOutputForward(1, 30);
@@ -105,37 +105,10 @@ public class Robot extends TimedRobot {
 
   }
 
-  /**
-   * This function is called every 20 ms, no matter the mode. Use this for items
-   * like diagnostics
-   * that you want ran during disabled, autonomous, teleoperated and test.
-   *
-   * <p>
-   * This runs after the mode specific periodic functions, but before LiveWindow
-   * and
-   * SmartDashboard integrated updating.
-   */
   @Override
   public void robotPeriodic() {
   }
 
-  /**
-   * This autonomous (along with the chooser code above) shows how to select
-   * between different
-   * autonomous modes using the dashboard. The sendable chooser code works with
-   * the Java
-   * SmartDashboard. If you prefer the LabVIEW Dashboard, remove all of the
-   * chooser code and
-   * uncomment the getString line to get the auto name from the text box below the
-   * Gyro
-   *
-   * <p>
-   * You can add additional auto modes by adding additional comparisons to the
-   * switch structure
-   * below with additional strings. If using the SendableChooser make sure to add
-   * them to the
-   * chooser code above as well.
-   */
   @Override
   public void autonomousInit() {
 
@@ -157,7 +130,7 @@ public class Robot extends TimedRobot {
   /** This function is called periodically during operator control. */
   @Override
   public void teleopPeriodic() {
-
+    
     if(arduino.getBytesReceived() > 0) {
        SmartDashboard.putString("Received: ", arduino.readString());
     }
@@ -193,15 +166,15 @@ public class Robot extends TimedRobot {
     flywheel.config_kI(0, i_flywheel);
 
     if (Joy1.getRawButton(4) && !Joy1.getRawButton(3)) {
-      if (increment1 <= 40) {
-        increment1 = increment1 + 0.3;
-      } else {
+      if (increment1 < 40) {
+        increment1 = increment1 + 0.2;
+      } else if(increment1 >= 40){
         increment1 = 40;
       }
     } else if (Joy1.getRawButton(3) && !Joy1.getRawButton(4)) {
-      if (increment1 >= 0) {
-        increment1 = increment1 - 0.3;
-      } else {
+      if (increment1 > 0.1) {
+        increment1 = increment1 - 0.2;
+      } else if(increment1 <=0){
         increment1 = 0;
       }
     }
@@ -228,11 +201,7 @@ public class Robot extends TimedRobot {
     setpoint1 = (increment1 / DEGREETOENCODER);
     double degree = hood.getSelectedSensorPosition() * DEGREETOENCODER;
     SmartDashboard.putNumber("Increment", increment1);
-    SmartDashboard.putNumber("Stator Current", hood.getStatorCurrent());
-    SmartDashboard.putNumber("Encoder Position", hood.getSelectedSensorPosition());
     SmartDashboard.putNumber("Hood Degree", degree);
-    SmartDashboard.putNumber("Output precent", hood.getMotorOutputPercent());
-    SmartDashboard.putNumber("CLosed Loop ERROR", hood.getClosedLoopError(0));
     SmartDashboard.putNumber("Speed of Flywheel", flywheel.getSelectedSensorVelocity() * 600/2048);
     SmartDashboard.putNumber("Target RPM of Flywheel ", rpm);
     SmartDashboard.putBoolean("Flag value", flywheel_flag);
@@ -243,7 +212,12 @@ public class Robot extends TimedRobot {
       flywheel.set(TalonFXControlMode.Velocity, rpm);
     }
     else{
-      flywheel.set(TalonFXControlMode.Velocity, 0);
+      flywheel.stopMotor();
+      // flywheel.set(TalonFXControlMode.Velocity, 0);
+    }
+
+    if(Joy1.getPOV() == 90){
+      flywheel.stopMotor();
     }
   }
 
