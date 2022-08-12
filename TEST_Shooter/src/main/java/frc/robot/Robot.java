@@ -4,9 +4,16 @@
 
 package frc.robot;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import com.ctre.phoenix.motorcontrol.ControlMode;
+import com.ctre.phoenix.motorcontrol.Faults;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.TalonFXControlMode;
 import com.ctre.phoenix.motorcontrol.TalonFXFeedbackDevice;
+import com.ctre.phoenix.motorcontrol.can.TalonFXPIDSetConfiguration;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 
 import edu.wpi.first.wpilibj.Joystick;
@@ -15,21 +22,13 @@ import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.SerialPort.Port;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
-/**
- * The VM is configured to automatically run this class, and to call the
- * functions corresponding to
- * each mode, as described in the TimedRobot documentation. If you change the
- * name of this class or
- * the package after creating this project, you must also update the
- * build.gradle file in the
- * project.
- */
+
+
 public class Robot extends TimedRobot {
 
-  double p1, i1, d1, f1;
   double p_flywheel, i_flywheel, d_flywheel, f_flywheel;
-  WPI_TalonFX hood = new WPI_TalonFX(7);
-  WPI_TalonFX flywheel = new WPI_TalonFX(4);
+  WPI_TalonFX hood = new WPI_TalonFX(Constants.Hood.CANid);
+  WPI_TalonFX flywheel = new WPI_TalonFX(Constants.Shooter.CANid);
 
   SerialPort arduino = new SerialPort(9600, Port.kUSB1);
 
@@ -39,8 +38,14 @@ public class Robot extends TimedRobot {
   double increment1;
   double setpoint1;
   Joystick Joy1 = new Joystick(0);
+  Faults fault = new Faults();
 
-  double DEGREETOENCODER = (12 * 360)/(2048 * 20 * 31.25);
+
+  List<Integer> velocityList = new ArrayList<Integer>();
+  boolean storeVelocityFlag = false;
+
+
+  double DEGREETOENCODER = (12 * 360) / (2048 * 20 * 31.25);
 
   /**
    * This function is run when the robot is first started up and should be used
@@ -49,10 +54,6 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void robotInit() {
-    p1 = 1;
-    i1 = 0;
-    d1 = 0.5;
-    f1 = 0;
 
     p_flywheel = 0;
     i_flywheel = 0;
@@ -60,9 +61,7 @@ public class Robot extends TimedRobot {
     f_flywheel = 0.19002;
 
     hood.configFactoryDefault();
-    hood.configSelectedFeedbackSensor(TalonFXFeedbackDevice.IntegratedSensor,
-        0,
-        30);
+    hood.configSelectedFeedbackSensor(TalonFXFeedbackDevice.IntegratedSensor, 0, 30);
     hood.setSensorPhase(true);
     hood.setInverted(false);
     hood.configNominalOutputForward(0, 30);
@@ -70,10 +69,10 @@ public class Robot extends TimedRobot {
     hood.configPeakOutputForward(0.7, 30);
     hood.configPeakOutputReverse(-0.7, 30);
     hood.configAllowableClosedloopError(0, 10, 30);
-    hood.config_kF(0, f1);
-    hood.config_kP(0, p1);
-    hood.config_kI(0, i1);
-    hood.config_kD(0, d1);
+    hood.config_kF(0, Constants.Hood.kf);
+    hood.config_kP(0, Constants.Hood.kp);
+    hood.config_kI(0, Constants.Hood.ki);
+    hood.config_kD(0, Constants.Hood.kd);
     hood.configClosedloopRamp(0.1);
     hood.setNeutralMode(NeutralMode.Brake);
 
@@ -81,26 +80,15 @@ public class Robot extends TimedRobot {
     flywheel.configSelectedFeedbackSensor(TalonFXFeedbackDevice.IntegratedSensor, 0, 30);
     flywheel.setSensorPhase(Constants.Shooter.ksensorPhase);
     flywheel.setInverted(Constants.Shooter.kmotorInverted);
-    flywheel.configNominalOutputForward(0, 30);
-    flywheel.configNominalOutputReverse(0, 30);
-    flywheel.configPeakOutputForward(1, 30);
-    flywheel.configPeakOutputReverse(-1, 30);
     flywheel.configAllowableClosedloopError(0, 0, 30);
-    flywheel.config_kF(0, f_flywheel);
-    flywheel.config_kP(0, p_flywheel);
-    flywheel.config_kD(0, d_flywheel);
-    flywheel.config_kI(0, i_flywheel);
+    flywheel.config_kF(0, Constants.Shooter.kf);
+    flywheel.config_kP(0, Constants.Shooter.kp);
+    flywheel.config_kD(0, Constants.Shooter.kd);
+    flywheel.config_kI(0, Constants.Shooter.ki);
     flywheel.setNeutralMode(NeutralMode.Coast);
     flywheel.configClosedloopRamp(5);
+    flywheel.getFaults(fault);
 
-    SmartDashboard.putNumber("P1", p1);
-    SmartDashboard.putNumber("I1", i1);
-    SmartDashboard.putNumber("D1", d1);
-    SmartDashboard.putNumber("F1", f1);
-    SmartDashboard.putNumber("P_Flywheel", p_flywheel);
-    SmartDashboard.putNumber("I_Flywheel", i_flywheel);
-    SmartDashboard.putNumber("D_Flywheel", d_flywheel);
-    SmartDashboard.putNumber("F_Flywheel", f_flywheel);
     SmartDashboard.putNumber("Speed of Flywheel", flywheel.getSelectedSensorVelocity());
 
   }
@@ -125,67 +113,68 @@ public class Robot extends TimedRobot {
     increment1 = 0;
     setpoint1 = 0;
     hood.setSelectedSensorPosition(0);
+
+    SmartDashboard.putNumber("P_Flywheel", Constants.Shooter.kp);
+    SmartDashboard.putNumber("I_Flywheel", Constants.Shooter.ki);
+    SmartDashboard.putNumber("D_Flywheel", Constants.Shooter.kd);
+    SmartDashboard.putNumber("F_Flywheel", Constants.Shooter.kf);
   }
 
   /** This function is called periodically during operator control. */
   @Override
   public void teleopPeriodic() {
-    
-    if(arduino.getBytesReceived() > 0) {
-       SmartDashboard.putString("Received: ", arduino.readString());
-    }
-    double kp1 = SmartDashboard.getNumber("P1", 0);
-    double ki1 = SmartDashboard.getNumber("I1", 0);
-    double kd1 = SmartDashboard.getNumber("D1", 0);
-    double kf1 = SmartDashboard.getNumber("F1", 0);
 
-    if ((kp1 != p1)) {
-      hood.config_kP(0, kp1);
-      p1 = kp1;
-    }
-    if ((ki1 != i1)) {
-      hood.config_kI(0, ki1);
-      i1 = ki1;
-    }
-    if ((kd1 != d1)) {
-      hood.config_kD(0, kd1);
-      d1 = kd1;
-    }
-    if ((kf1 != f1)) {
-      hood.config_kF(0, kf1);
-      f1 = kf1;
+    if (arduino.getBytesReceived() > 0) {
+      SmartDashboard.putString("Received: ", arduino.readString());
     }
 
-    p_flywheel = SmartDashboard.getNumber("P_Flywheel", 0);
-    i_flywheel = SmartDashboard.getNumber("I_Flywheel", 0);
-    d_flywheel = SmartDashboard.getNumber("D_Flywheel", 0);
-    f_flywheel = SmartDashboard.getNumber("F_Flywheel", 0);
-    flywheel.config_kF(0, f_flywheel);
+    p_flywheel = SmartDashboard.getNumber("P_Flywheel", Constants.Shooter.kp);
+    i_flywheel = SmartDashboard.getNumber("I_Flywheel", Constants.Shooter.ki);
+    d_flywheel = SmartDashboard.getNumber("D_Flywheel", Constants.Shooter.kd);
+    f_flywheel = SmartDashboard.getNumber("F_Flywheel", Constants.Shooter.kf);
+
     flywheel.config_kP(0, p_flywheel);
-    flywheel.config_kD(0, d_flywheel);
     flywheel.config_kI(0, i_flywheel);
+    flywheel.config_kD(0, d_flywheel);
+    flywheel.config_kF(0, f_flywheel);
+
+    // if(Constants.Shooter.kp != p_flywheel){
+    // Constants.Shooter.kp = p_flywheel;
+    // flywheel.config_kP(0, Constants.Shooter.kp);
+    // }
+    // if(Constants.Shooter.kd != d_flywheel){
+    // Constants.Shooter.kd = d_flywheel;
+    // flywheel.config_kD(0, Constants.Shooter.kd);
+    // }
+    // if(Constants.Shooter.ki != i_flywheel){
+    // Constants.Shooter.ki = i_flywheel;
+    // flywheel.config_kI(0, Constants.Shooter.ki);
+    // }
+    // if(Constants.Shooter.kf != f_flywheel){
+    // Constants.Shooter.kf = f_flywheel;
+    // flywheel.config_kF(0, Constants.Shooter.kf);
+    // }
 
     if (Joy1.getRawButton(4) && !Joy1.getRawButton(3)) {
-      if (increment1 < 40) {
-        increment1 = increment1 + 0.2;
-      } else if(increment1 >= 40){
-        increment1 = 40;
+      if (increment1 < Constants.Hood.maxAngle) {
+        increment1 = increment1 + Constants.Hood.minimumStep;
+      } else if (increment1 >= Constants.Hood.maxAngle) {
+        increment1 = Constants.Hood.maxAngle;
       }
     } else if (Joy1.getRawButton(3) && !Joy1.getRawButton(4)) {
       if (increment1 > 0.1) {
-        increment1 = increment1 - 0.2;
-      } else if(increment1 <=0){
+        increment1 = increment1 - Constants.Hood.minimumStep;
+      } else if (increment1 <= 0) {
         increment1 = 0;
       }
     }
-    
-    if(Joy1.getRawButtonPressed(1)){
+
+    if (Joy1.getRawButtonPressed(1)) {
       rpm = rpm + 100;
-    }
-    else if(Joy1.getRawButtonPressed(2)){
+    } else if (Joy1.getRawButtonPressed(2)) {
       rpm = rpm - 100;
     }
-    if(rpm < 0){
+    if (rpm < 0) {
       rpm = 0;
     }
 
@@ -197,28 +186,51 @@ public class Robot extends TimedRobot {
       }
     }
 
-    
     setpoint1 = (increment1 / DEGREETOENCODER);
+
     double degree = hood.getSelectedSensorPosition() * DEGREETOENCODER;
+    flywheel_speed = flywheel.getSelectedSensorVelocity() * 600 / 2048;
+
+    
+
+    if(Joy1.getRawButtonPressed(8)){
+      storeVelocityFlag = false;
+      int dropVel = Collections.min(velocityList);
+      SmartDashboard.putNumber("Smallest Velocity", dropVel);
+      velocityList.clear();
+    }
+
+    if(Joy1.getRawButtonPressed(6)){
+      storeVelocityFlag = true;
+    }
+
+    if(storeVelocityFlag == true){
+      velocityList.add((int) flywheel_speed);
+    }
+
+
     SmartDashboard.putNumber("Increment", increment1);
     SmartDashboard.putNumber("Hood Degree", degree);
-    SmartDashboard.putNumber("Speed of Flywheel", flywheel.getSelectedSensorVelocity() * 600/2048);
+    SmartDashboard.putNumber("Speed of Flywheel", flywheel_speed);
     SmartDashboard.putNumber("Target RPM of Flywheel ", rpm);
     SmartDashboard.putBoolean("Flag value", flywheel_flag);
+    SmartDashboard.putBoolean("SensorOutOfPhase", fault.SensorOutOfPhase);
+
 
     hood.set(TalonFXControlMode.Position, setpoint1);
 
     if (flywheel_flag == true) {
+
       flywheel.set(TalonFXControlMode.Velocity, rpm);
-    }
-    else{
+    } else {
       flywheel.stopMotor();
       // flywheel.set(TalonFXControlMode.Velocity, 0);
     }
 
-    if(Joy1.getPOV() == 90){
+    if (Joy1.getPOV() == 90) {
       flywheel.stopMotor();
     }
+
   }
 
   /** This function is called once when the robot is disabled. */
