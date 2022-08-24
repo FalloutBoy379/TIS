@@ -49,11 +49,6 @@ public class Robot extends TimedRobot {
 
   double DEGREETOENCODER = (12 * 360) / (2048 * 20 * 31.25);
 
-  /**
-   * This function is run when the robot is first started up and should be used
-   * for any
-   * initialization code.
-   */
   @Override
   public void robotInit() {
 
@@ -140,24 +135,6 @@ public class Robot extends TimedRobot {
     flywheel.config_kD(0, d_flywheel);
     flywheel.config_kF(0, f_flywheel);
 
-    // if(Constants.Shooter.kp != p_flywheel){
-    // Constants.Shooter.kp = p_flywheel;
-    // flywheel.config_kP(0, Constants.Shooter.kp);
-    // }
-    // if(Constants.Shooter.kd != d_flywheel){
-    // Constants.Shooter.kd = d_flywheel;
-    // flywheel.config_kD(0, Constants.Shooter.kd);
-    // }
-    // if(Constants.Shooter.ki != i_flywheel){
-    // Constants.Shooter.ki = i_flywheel;
-    // flywheel.config_kI(0, Constants.Shooter.ki);
-    // }
-    // if(Constants.Shooter.kf != f_flywheel){
-    // Constants.Shooter.kf = f_flywheel;
-    // flywheel.config_kF(0, Constants.Shooter.kf);
-    // }
-
-    // if (Joy1.getRawButton(4) && !Joy1.getRawButton(3)) {
       if(PS5.getCircleButton()){
       if (increment1 < Constants.Hood.maxAngle) {
         increment1 = increment1 + Constants.Hood.minimumStep;
