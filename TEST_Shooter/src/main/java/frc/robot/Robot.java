@@ -17,6 +17,7 @@ import com.ctre.phoenix.motorcontrol.can.TalonFXPIDSetConfiguration;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 
 import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.PS4Controller;
 import edu.wpi.first.wpilibj.SerialPort;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.SerialPort.Port;
@@ -30,14 +31,15 @@ public class Robot extends TimedRobot {
   WPI_TalonFX hood = new WPI_TalonFX(Constants.Hood.CANid);
   WPI_TalonFX flywheel = new WPI_TalonFX(Constants.Shooter.CANid);
 
-  SerialPort arduino = new SerialPort(9600, Port.kUSB1);
+  SerialPort arduino = new SerialPort(115200, Port.kUSB1);
 
   double rpm = 0;
   double flywheel_speed;
   boolean flywheel_flag = false;
   double increment1;
   double setpoint1;
-  Joystick Joy1 = new Joystick(0);
+  // Joystick Joy1 = new Joystick(0);
+  PS4Controller PS5 = new PS4Controller(0);
   Faults fault = new Faults();
 
 
@@ -155,30 +157,35 @@ public class Robot extends TimedRobot {
     // flywheel.config_kF(0, Constants.Shooter.kf);
     // }
 
-    if (Joy1.getRawButton(4) && !Joy1.getRawButton(3)) {
+    // if (Joy1.getRawButton(4) && !Joy1.getRawButton(3)) {
+      if(PS5.getCircleButton()){
       if (increment1 < Constants.Hood.maxAngle) {
         increment1 = increment1 + Constants.Hood.minimumStep;
       } else if (increment1 >= Constants.Hood.maxAngle) {
         increment1 = Constants.Hood.maxAngle;
       }
-    } else if (Joy1.getRawButton(3) && !Joy1.getRawButton(4)) {
-      if (increment1 > 0.1) {
+    // } else if (Joy1.getRawButton(3) && !Joy1.getRawButton(4)) {
+    }else if(PS5.getSquareButton()){
+      if (increment1 > Constants.Hood.minAngle) {
         increment1 = increment1 - Constants.Hood.minimumStep;
       } else if (increment1 <= 0) {
         increment1 = 0;
       }
     }
 
-    if (Joy1.getRawButtonPressed(1)) {
+    // if (Joy1.getRawButtonPressed(1)) {
+      if(PS5.getTriangleButtonPressed()){
       rpm = rpm + 100;
-    } else if (Joy1.getRawButtonPressed(2)) {
+    // } else if (Joy1.getRawButtonPressed(2)) {
+    }else if(PS5.getCrossButtonPressed()){
       rpm = rpm - 100;
     }
     if (rpm < 0) {
       rpm = 0;
     }
 
-    if (Joy1.getRawButtonPressed(5)) {
+    // if (Joy1.getRawButtonPressed(5)) {
+      if(PS5.getL1ButtonPressed()){
       if (flywheel_flag == true) {
         flywheel_flag = false;
       } else if (flywheel_flag == false) {
@@ -193,14 +200,16 @@ public class Robot extends TimedRobot {
 
     
 
-    if(Joy1.getRawButtonPressed(8)){
+    // if(Joy1.getRawButtonPressed(8)){
+      if(PS5.getR1ButtonPressed()){
       storeVelocityFlag = false;
       int dropVel = Collections.min(velocityList);
       SmartDashboard.putNumber("Smallest Velocity", dropVel);
       velocityList.clear();
     }
 
-    if(Joy1.getRawButtonPressed(6)){
+    // if(Joy1.getRawButtonPressed(6)){
+      if(PS5.getTouchpadPressed()){
       storeVelocityFlag = true;
     }
 
@@ -215,6 +224,7 @@ public class Robot extends TimedRobot {
     SmartDashboard.putNumber("Target RPM of Flywheel ", rpm);
     SmartDashboard.putBoolean("Flag value", flywheel_flag);
     SmartDashboard.putBoolean("SensorOutOfPhase", fault.SensorOutOfPhase);
+    SmartDashboard.putBoolean("Storing Velocity in List", storeVelocityFlag);
 
 
     hood.set(TalonFXControlMode.Position, setpoint1);
@@ -227,7 +237,8 @@ public class Robot extends TimedRobot {
       // flywheel.set(TalonFXControlMode.Velocity, 0);
     }
 
-    if (Joy1.getPOV() == 90) {
+    // if (Joy1.getPOV() == 90) {
+      if(PS5.getPOV() == 90){
       flywheel.stopMotor();
     }
 

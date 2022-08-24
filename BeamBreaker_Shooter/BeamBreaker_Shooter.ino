@@ -29,15 +29,15 @@ void loop() {
     timePassed = (millis()) - (timer);
     velocity = (BALLDIAMETER) / (timePassed);
     velocity =  INCHESPERMILLISECONDTOMETERPERSECOND * velocity;
-
-    Serial.print(velocity);
-
+    if (velocity < 100) {
+      Serial.println(velocity);
+    }
   }
-//  if (Serial.available()) {
-//    if (Serial.read() == 'g') {
-//      Serial.print(velocity);
-//    }
-//  }
+  //  if (Serial.available()) {
+  //    if (Serial.read() == 'g') {
+  //      Serial.print(velocity);
+  //    }
+  //  }
 
 }
 
@@ -49,3 +49,28 @@ void isr1() {
 void isr2() {
   flag = 0;
 }
+
+
+
+
+    // public double rateLimiter(double current, double prev, double max){
+    //     double delta = current-prev;
+        
+    //     if(delta > max){
+    //         delta = max;
+    //     }
+    //     else if(delta < -max){
+    //         delta = -max;
+    //     }
+        
+    //     return (prev + delta);
+    // }
+
+
+                // turn = Math.pow(turn, 1.72);
+            // turn = turn * 0.7;
+            
+            // throttle = Math.pow(throttle, 1.72);
+            
+            // throttle = rateLimiter(throttle, prevThrottle, 0.5);
+            // turn = rateLimiter(turn, prevTurn, 0.5);  
