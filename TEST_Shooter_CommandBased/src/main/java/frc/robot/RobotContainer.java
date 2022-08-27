@@ -34,7 +34,8 @@ public class RobotContainer {
   private final ExampleSubsystem m_exampleSubsystem = new ExampleSubsystem();
   private final ServoSubSystem servoSubSystem = new ServoSubSystem();
 
-  JoystickButton button = new JoystickButton(joy1, 1);
+  JoystickButton moveButton = new JoystickButton(joy1, 1);
+  JoystickButton initButton = new JoystickButton(joy1, 6); 
 
   private final ExampleCommand m_autoCommand = new ExampleCommand(m_exampleSubsystem);
   private final ServoCommand servoCommand = new ServoCommand(servoSubSystem);
@@ -57,7 +58,7 @@ public class RobotContainer {
    * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
    */
   private void configureButtonBindings() {
-      button.whenActive(servoCommand);
+      moveButton.whenActive();
 
   }
 

@@ -38,8 +38,8 @@ public class Robot extends TimedRobot {
   boolean flywheel_flag = false;
   double increment1;
   double setpoint1;
-  // Joystick Joy1 = new Joystick(0);
-  PS4Controller PS5 = new PS4Controller(0);
+  Joystick Joy1 = new Joystick(0);
+  // PS4Controller PS5 = new PS4Controller(0);
   Faults fault = new Faults();
 
 
@@ -47,7 +47,7 @@ public class Robot extends TimedRobot {
   boolean storeVelocityFlag = false;
 
 
-  double DEGREETOENCODER = (12 * 360) / (2048 * 20 * 31.25);
+  double HOOD_DEGREETOENCODER = (12 * 360) / (2048 * 20 * 31.25);
 
   @Override
   public void robotInit() {
@@ -135,14 +135,15 @@ public class Robot extends TimedRobot {
     flywheel.config_kD(0, d_flywheel);
     flywheel.config_kF(0, f_flywheel);
 
-      if(PS5.getCircleButton()){
+      if(Joy1.getRawButton(4) && !Joy1.getRawButton(3)){
+      // if(PS5.getCircleButton()){
       if (increment1 < Constants.Hood.maxAngle) {
         increment1 = increment1 + Constants.Hood.minimumStep;
       } else if (increment1 >= Constants.Hood.maxAngle) {
         increment1 = Constants.Hood.maxAngle;
       }
-    // } else if (Joy1.getRawButton(3) && !Joy1.getRawButton(4)) {
-    }else if(PS5.getSquareButton()){
+    } else if (Joy1.getRawButton(3) && !Joy1.getRawButton(4)) {
+    // }else if(PS5.getSquareButton()){
       if (increment1 > Constants.Hood.minAngle) {
         increment1 = increment1 - Constants.Hood.minimumStep;
       } else if (increment1 <= 0) {
@@ -150,19 +151,19 @@ public class Robot extends TimedRobot {
       }
     }
 
-    // if (Joy1.getRawButtonPressed(1)) {
-      if(PS5.getTriangleButtonPressed()){
+    if (Joy1.getRawButtonPressed(1)) {
+      // if(PS5.getTriangleButtonPressed()){
       rpm = rpm + 100;
-    // } else if (Joy1.getRawButtonPressed(2)) {
-    }else if(PS5.getCrossButtonPressed()){
+    } else if (Joy1.getRawButtonPressed(2)) {
+    // }else if(PS5.getCrossButtonPressed()){
       rpm = rpm - 100;
     }
     if (rpm < 0) {
       rpm = 0;
     }
 
-    // if (Joy1.getRawButtonPressed(5)) {
-      if(PS5.getL1ButtonPressed()){
+    if (Joy1.getRawButtonPressed(5)) {
+      // if(PS5.getL1ButtonPressed()){
       if (flywheel_flag == true) {
         flywheel_flag = false;
       } else if (flywheel_flag == false) {
@@ -170,23 +171,23 @@ public class Robot extends TimedRobot {
       }
     }
 
-    setpoint1 = (increment1 / DEGREETOENCODER);
+    setpoint1 = (increment1 / HOOD_DEGREETOENCODER);
 
-    double degree = hood.getSelectedSensorPosition() * DEGREETOENCODER;
+    double degree = hood.getSelectedSensorPosition() * HOOD_DEGREETOENCODER;
     flywheel_speed = flywheel.getSelectedSensorVelocity() * 600 / 2048;
 
     
 
-    // if(Joy1.getRawButtonPressed(8)){
-      if(PS5.getR1ButtonPressed()){
+    if(Joy1.getRawButtonPressed(8)){
+      // if(PS5.getR1ButtonPressed()){
       storeVelocityFlag = false;
       int dropVel = Collections.min(velocityList);
       SmartDashboard.putNumber("Smallest Velocity", dropVel);
       velocityList.clear();
     }
 
-    // if(Joy1.getRawButtonPressed(6)){
-      if(PS5.getTouchpadPressed()){
+    if(Joy1.getRawButtonPressed(6)){
+      // if(PS5.getTouchpadPressed()){
       storeVelocityFlag = true;
     }
 
@@ -214,8 +215,8 @@ public class Robot extends TimedRobot {
       // flywheel.set(TalonFXControlMode.Velocity, 0);
     }
 
-    // if (Joy1.getPOV() == 90) {
-      if(PS5.getPOV() == 90){
+    if (Joy1.getPOV() == 90) {
+      // if(PS5.getPOV() == 90){
       flywheel.stopMotor();
     }
 
