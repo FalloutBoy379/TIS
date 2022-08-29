@@ -35,8 +35,8 @@ public class Robot extends TimedRobot {
   WPI_TalonFX flywheel = new WPI_TalonFX(Constants.Shooter.CANid);
   WPI_TalonFX turret = new WPI_TalonFX(9);
 
-  LinearFilter limelightXFilter = LinearFilter.movingAverage(100);
-  LinearFilter limelightYFilter = LinearFilter.movingAverage(100);
+  LinearFilter limelightXFilter = LinearFilter.movingAverage(60);
+  LinearFilter limelightYFilter = LinearFilter.movingAverage(60);
 
   SerialPort arduino = new SerialPort(115200, Port.kUSB1);
 
@@ -176,6 +176,7 @@ public class Robot extends TimedRobot {
     SmartDashboard.putNumber("Limelight x Error = ", xError);
     SmartDashboard.putNumber("Limelight y Error = ", yError);
     double xError1 = limelightXFilter.calculate(xError);
+    xError1 = xError1 * 3;
 
     p_flywheel = SmartDashboard.getNumber("P_Flywheel", Constants.Shooter.kp);
     i_flywheel = SmartDashboard.getNumber("I_Flywheel", Constants.Shooter.ki);
@@ -204,10 +205,17 @@ public class Robot extends TimedRobot {
 
 
 
-    if(Math.abs(yError1 - prevYerror) < 2){
+    // if(Math.abs(yError1 - prevYerror) < 2){
       increment1 = 40 - yError1;
       turret_increment = xError1;
-    }
+
+      if(increment1 >= 40){
+        increment1 = 40;
+      }
+      else if(increment1 <= 0){
+        increment1 = 0;
+      }
+    // }
     
 
     if (Joy1.getRawButtonPressed(1)) {
