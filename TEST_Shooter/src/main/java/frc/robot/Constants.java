@@ -36,9 +36,14 @@ public class Constants {
         public static final double ki = 0;
         public static final double kd = 0.5;
         public static final double kf = 0;
+
+        public static double DEGREETOENCODER = (12 * 360) / (2048 * 20 * 31.25);
     } 
 
     public static class Turret{
+        public static final int CANid = 9;
+        public static final int movingAverageXTaps = 100;
+        public static final int movingAverageYTaps = 100;
         public static final double DEGREETOENCODER = 125.15555555555555555555555555556;
         public static final double ENCODERTODEGREE = 1/DEGREETOENCODER;
         public static final double minAngle = -45;

@@ -12,13 +12,9 @@ import com.ctre.phoenix.motorcontrol.Faults;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.TalonFXControlMode;
 import com.ctre.phoenix.motorcontrol.TalonFXFeedbackDevice;
-import com.ctre.phoenix.motorcontrol.can.TalonFXPIDSetConfiguration;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 
-import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.filter.LinearFilter;
-import edu.wpi.first.networktables.NetworkTable;
-import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.SerialPort;
@@ -56,17 +52,12 @@ public class Robot extends TimedRobot {
   boolean storeVelocityFlag = false;
 
 
-  double HOOD_DEGREETOENCODER = (12 * 360) / (2048 * 20 * 31.25);
+  
 
   double prevYerror = 0, prevXError = 0;
 
   @Override
   public void robotInit() {
-
-    p_flywheel = 0;
-    i_flywheel = 0;
-    d_flywheel = 0;
-    f_flywheel = 0.19002;
 
     hood.configFactoryDefault();
     hood.configSelectedFeedbackSensor(TalonFXFeedbackDevice.IntegratedSensor, 0, 30);
@@ -113,8 +104,10 @@ public class Robot extends TimedRobot {
     turret.configClosedloopRamp(0.2);
     turret.setNeutralMode(NeutralMode.Brake);
     hood.setSelectedSensorPosition(0);
+
+    //Initial angle for hood is 40 degrees
     increment1 = 40;
-    setpoint1 = (increment1 / HOOD_DEGREETOENCODER);
+    setpoint1 = (increment1 / Constants.Hood.DEGREETOENCODER);
     hood.set(TalonFXControlMode.Position, setpoint1);
     SmartDashboard.putNumber("Speed of Flywheel", flywheel.getSelectedSensorVelocity());
 
@@ -162,12 +155,12 @@ public class Robot extends TimedRobot {
     
   }
 
-  /** This function is called periodically during operator control. */
+
   @Override
   public void teleopPeriodic() {
 
     if (arduino.getBytesReceived() > 0) {
-      // SmartDashboard.putString("Received: ", arduino.readString());
+      SmartDashboard.putString("Received: ", arduino.readString());
     }
 
     double xError = NetworkTableInstance.getDefault().getTable("limelight").getEntry("tx").getDouble(0);
@@ -205,10 +198,12 @@ public class Robot extends TimedRobot {
 
 
 
-    // if(Math.abs(yError1 - prevYerror) < 2){
-      increment1 = 40 - yError1;
+    // if(Math.abs(yError1 - prevYerror) < 2){                                //Uncomment this line to make turret and hood stay at last position when Limelight suddenly drops to 0
+      increment1 = 40 - yError1;                                         
       turret_increment = xError1;
 
+
+      //LIMIT THE ANGLES FOR HOOD
       if(increment1 >= 40){
         increment1 = 40;
       }
@@ -235,14 +230,10 @@ public class Robot extends TimedRobot {
       }
     }
 
-    // increment1 = yError;
-    setpoint1 = (increment1 / HOOD_DEGREETOENCODER);
+    setpoint1 = (increment1 / Constants.Hood.DEGREETOENCODER);
 
-    // if(setpoint1 <= 0){
-    //   setpoint1 = 0;
-    // }
 
-    double degree = hood.getSelectedSensorPosition() * HOOD_DEGREETOENCODER;
+    double degree = hood.getSelectedSensorPosition() * Constants.Hood.DEGREETOENCODER;
     flywheel_speed = flywheel.getSelectedSensorVelocity() * 600 / 2048;
 
     
@@ -277,26 +268,12 @@ public class Robot extends TimedRobot {
 
     hood.set(TalonFXControlMode.Position, setpoint1);
 
-    // setpoint1 = -yError;
-
     if (flywheel_flag == true) {
 
       flywheel.set(TalonFXControlMode.Velocity, rpm);
     } else {
       flywheel.stopMotor();
     }
-
-    // if (Joy1.getPOV() == 90) {
-    //   // if(PS5.getPOV() == 90){
-    //   flywheel.stopMotor();
-    // }
-
-    turret.config_kP(0, SmartDashboard.getNumber("P_Turret", Constants.Turret.kp));
-    turret.config_kI(0, SmartDashboard.getNumber("I_Turret", Constants.Turret.ki));
-    turret.config_kD(0, SmartDashboard.getNumber("D_Turret", Constants.Turret.kd));
-    turret.config_kF(0, SmartDashboard.getNumber("F_Turret", Constants.Turret.kf));
-
-    // turret_increment = 0;
 
     if(Joy1.getRawButtonPressed(6)){
       if (turret_increment < Constants.Turret.maxAngle) {
@@ -312,17 +289,14 @@ public class Robot extends TimedRobot {
       }
     }
 
-    // turret_increment = Joy1.getRawAxis(0) * 45;
-    // double x_error = xError - (Constants.Turret.ENCODERTODEGREE * turret.getSelectedSensorPosition());
-
     
 
-    // if(turret_increment>=Constants.Turret.maxAngle){
-    //   turret_increment = Constants.Turret.maxAngle;
-    // }
-    // else if(turret_increment<=Constants.Turret.minAngle){
-    //   turret_increment = Constants.Turret.minAngle;
-    // }
+    if(turret_increment>=Constants.Turret.maxAngle){
+      turret_increment = Constants.Turret.maxAngle;
+    }
+    else if(turret_increment<=Constants.Turret.minAngle){
+      turret_increment = Constants.Turret.minAngle;
+    }
 
     double turret_setpoint = (turret_increment * Constants.Turret.DEGREETOENCODER);
 
