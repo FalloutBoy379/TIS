@@ -27,7 +27,7 @@ public class Constants {
     public static class Hood{
         public static final int CANid = 7;
 
-        public static final double minimumStep = 10;
+        public static final double minimumStep = 0.3;
         public static final double maxAngle = 40;
 
         public static final double minAngle = 0.1;
